@@ -25,11 +25,18 @@ class Slice:
 			print("Synk %d: %s" % (x,self.sensitiveSynks[x]))
 
 ##################
-test = Slice()
-test.getItems()
+#test = Slice()
+#test.getItems()
 ##################
 
 def fileParser():
+	#Important vars
+	varsList = []
+	entryPoints = []
+	validation = []
+	sensitiveSynks = []
+
+
 	#Insert FileName
 	fileName = "sqli_01.txt" #input("Enter file name: ")
 	print("File Name : %s" % fileName)
@@ -40,32 +47,40 @@ def fileParser():
 
 	#Read its content to a list
 	content = fo.readlines()
-	getEntryPoints(content)
+
+	#FUNTION to create a list of Variables in the SLICE
+	getVarList(content,varsList, entryPoints)
+	#FUNCTION to create a list of ENTRYPOINTS in the SLICE
+	getEntryPoints(content, varsList, entryPoints)
+	#FUNCTION to create a list of VALIDATIONS in the SLICE
+	#getValidations()
+	#FUNCTION to create a list of SENSITIVESYNKS in the SLICE
+	#getSynks()
+
+	#Just an AKNOWLEDGE:  VARSLIST[i] has a ENTRYPOINT[i]
+	for l in range(len(varsList)):
+		print("Var : %s ----> EP : %s" % (varsList[l], entryPoints[l]))
+
 
 #AUX FUNTIONS
-def getEntryPoints(content):
-	varsList = []
-	entryPoints = []
-
-	#Get Vars
+def getVarList(content, varsList, entryPoints):
+	#Get VarsList
 	expr = re.compile('\$([a-zA-Z]\w*)(?=\s*=)')
 	for i in range(len(content)):
 		if(expr.match(content[i]) is not None):
 			varsList.append(expr.match(content[i]).group())
+
+	#Initialize entryPoints[] to empty string
 	for i in range(len(varsList)):
 		entryPoints.append('')
 
+def getEntryPoints(content, varsList, entryPoints):
 	#Get ENTRYPOINTS for each VARIABLE : VAR[i] associates ENTRYPOINT[i]
 	for ep in range(len(EP)):
 		for line in range(len(content)):
+			#This is important to put the EntryPOint in the correct INDEX
 			if(EP[ep] in content[line] and varsList[line] in content[line]):
 				entryPoints[line] = EP[ep]
-
-	#Acknowledge that for each var in slice there is an EntryPOint Y associated with
-	for l in range(len(varsList)):
-		print("Var : %s ----> EP : %s" % (varsList[l], entryPoints[l]))
-
-	return 0
 
 
 
