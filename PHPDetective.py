@@ -15,7 +15,7 @@ def main(argv):
         opts, args = getopt.getopt(argv,"hi:",["ifile="])
     except getopt.GetoptError:
         logging.error('PHPDetective.py -i <inputfile>')
-           sys.exit(2)
+        sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
             logging.info('PHPDetective.py -i <inputfile>')
@@ -29,12 +29,13 @@ def main(argv):
     patParser.parseAll()
 
     patterns = patParser.getKnownPatterns()
-    
+
     entryPoints = utilities.getEntry(patterns)
-    validation = utilities.getVal(patterns)
+    validation = utilities.getVals(patterns)
     sensitiveSinks = utilities.getSinks(patterns)
 
-    slices = SliceParser.parse(inputfile, entryPoints, validation, sensitiveSinks)
+    slices = SliceParser.fileParser(inputfile, entryPoints, validation, sensitiveSinks)
+
 
     """
     if(Matcher)
