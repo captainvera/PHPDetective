@@ -1,3 +1,8 @@
+
+import re
+
+EP = ['$_POST','$_GET','$_COOKIE','$_REQUEST', 'HTTP_GET_VARS', 'HTTP_POST_VARS', 'HTTP_COOKIE_VARS', 'HTTP_REQUEST_VARS','$_FILES','$_SERVERS']
+
 class Slice:
 	name = ''
 	entryPoints = []
@@ -35,15 +40,31 @@ def fileParser():
 
 	#Read its content to a list
 	content = fo.readlines()
-	print(len(content))
-	for i in range(len(content)):
-		print(content[i])
+	getEntryPoints(content)
 
 #AUX FUNTIONS
-def SQLInjection(content):
-	return 0
+def getEntryPoints(content):
+	varsList = []
+	entryPoints = []
 
-def XSS(content):
+	#Get Vars
+	expr = re.compile('\$([a-zA-Z]\w*)(?=\s*=)')
+	for i in range(len(content)):
+		if(expr.match(content[i]) is not None):
+			varsList.append(expr.match(content[i]).group())
+	for i in range(len(varsList)):
+		entryPoints.append('')
+
+	#Get ENTRYPOINTS for each VARIABLE : VAR[i] associates ENTRYPOINT[i]
+	for ep in range(len(EP)):
+		for line in range(len(content)):
+			if(EP[ep] in content[line] and varsList[line] in content[line]):
+				entryPoints[line] = EP[ep]
+
+	#Acknowledge that for each var in slice there is an EntryPOint Y associated with
+	for l in range(len(varsList)):
+		print("Var : %s ----> EP : %s" % (varsList[l], entryPoints[l]))
+
 	return 0
 
 
