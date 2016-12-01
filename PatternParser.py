@@ -1,7 +1,7 @@
 import os
 import logging
 
-logging.basicConfig( level=logging.ERROR)
+logging.basicConfig( level=logging.DEBUG)
 
 def getChunks(data, n):
     """
@@ -14,8 +14,8 @@ def getChunks(data, n):
     for line in data:
         line = line.strip(' \n\t\r')
 
-        logging.debug('N:',len(next_chunk))
-        logging.debug('LINE:',line)
+        logging.debug('N:'+str(len(next_chunk)))
+        logging.debug('LINE:'+str(line))
 
         if (len(next_chunk)==n):
             chunks.append(next_chunk)
@@ -24,8 +24,6 @@ def getChunks(data, n):
             logging.debug('\n----- END OF PATTERN -----\n')
 
         next_chunk.append(line)
-
-        logging.debug('NEXT CHUNK:',next_chunk)
 
     chunks.append(next_chunk)
     logging.debug(chunks)
@@ -50,8 +48,8 @@ class PatternParser:
 
         path = self.folder+'/'+file
         new_patterns = []
-        logging.info('[>] Parsing all patterns in',file)
-
+        logging.info('[>] Parsing all patterns in ' + file)
+        
         raw_text = open(path,'r')
         lines = raw_text.readlines()
         patterns = getChunks(lines,4)
@@ -73,8 +71,10 @@ class PatternParser:
         """
         Parses all files to be parsed
         """
+
         for file in self.toParse:
-            self.parse(file)
+            if(file.endswith(".txt")):
+                self.parse(file)
 
     def getKnownPatterns(self):
         """
@@ -123,10 +123,10 @@ Utilization examples
 """
 
 #creates a parser to parse all files in 'Patterns' folder
-patParser = PatternParser('Patterns')
+#patParser = PatternParser('Patterns')
 
 #parses all files
-patParser.parseAll()
+#patParser.parseAll()
 
 #gets a list of the patterns in those files
-patterns = patParser.getKnownPatterns()
+#patterns = patParser.getKnownPatterns()
