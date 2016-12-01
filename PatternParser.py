@@ -57,9 +57,10 @@ class PatternParser:
         patterns = getChunks(lines,4)
         for pattern in patterns:
             vuln = pattern[0]
-            entry_points = pattern[1]
+            entry_points = pattern[1].split(',')
             san_functions = pattern[2]
             sens_sinks = pattern[3]
+
 
             new_pattern = Pattern(vuln,entry_points,san_functions,sens_sinks)
             new_patterns.append(new_pattern)
