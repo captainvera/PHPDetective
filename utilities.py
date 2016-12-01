@@ -10,7 +10,7 @@ def getEntry(patterns):
     return entries
 
 
-def getVal(patterns):
+def getVals(patterns):
     vals = []
     for pattern in patterns:
         for val in pattern.getSanitizingFunctions():
