@@ -13,7 +13,7 @@ foundSensitiveSinks = []
 foundVariables = []
 
 logger = logging.getLogger("mylog")
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.DEBUG)
 
 class Slice:
     entryPoints = []
@@ -45,15 +45,18 @@ class Slice:
 class EntryPoint:
     line = 0
     name = ''
-    dangerous = False
 
     def __init__(self, name, line):
         self.name = name
         self.line = line
-        self.dangerous = False
+        self.__dangerous = False
 
     def setDangerous(self, boolean):
-        self.dangerous = boolean
+        logger.debug("Dangerous set to -> " + str(boolean))
+        self.__dangerous = boolean
+    
+    def isDangerous(self):
+        return self.__dangerous
 
 class Variable:
     name = ''
@@ -75,7 +78,7 @@ class Variable:
         
             if(len(self.ancestors) > 0):
                 for ancestor in self.ancestors:
-                    ancestor.setDangerous(True)
+                    ancestor.setDangerous(boolean)
 
     def addAncestor(self, variables):
         self.ancestors.extend(variables);
@@ -160,11 +163,11 @@ def fileParser(fileName, entry, vali, sinks):
 
         dangerousEntries = []
         for entry in foundEntryPoints:
-            if(entry.dangerous == True):
+            if(entry.isDangerous() == True):
                 logger.info("[Ending] Dangerous Entry -> " + entry.name)
                 dangerousEntries.append(entry)
             else:
-                logger.info("[Ending] Entry point -> " + entry.name)
+                logger.info("[Ending] Entry point -> " + entry.name + " with dangerous: " + str(entry.isDangerous()))
 
         for sanitization in foundValidations:
             logger.info("[Ending] Validation -> " + sanitization.name)
@@ -216,8 +219,10 @@ def getVariables(line, lineNumber):
                 varObj = Variable(var, lineNumber)
                 if(isinstance(rightSide, Variable)):
                     if(rightSide.sanitized == True):
-                        varObj.sanitized = True
-                varObj.addAncestor([rightSide])
+                        varObj.sanitize()
+                    varObj.addAncestor([rightSide]+ rightSide.ancestors)
+                elif(isinstance(rightSide, EntryPoint)):
+                    varObj.addAncestor([rightSide])
                 result.append(varObj)
 
     return result
@@ -229,6 +234,8 @@ def getEntryPoints(line, lineNumber):
         if entry in line:
             logger.debug("Found Entry -> " + entry)
             entryObj = EntryPoint(entry, lineNumber)
+            for entry in foundEntryPoints:
+                print(entry.name)
             result.append(entryObj)
 
     return result;
@@ -257,6 +264,7 @@ def insideSink(line, sink):
 
     else:
         entryPoints = getEntryPoints(line[sinkIndex:], sink.line)
+        foundEntryPoints.extend(entryPoints)
 
         if(entryPoints == []):
             var = findVariable(line[sinkIndex:])
@@ -264,8 +272,8 @@ def insideSink(line, sink):
                 var.setDangerous(True)
         else: 
             if(len(entryPoints) == 1):
-                logger.debug("FOUND DANGEROUS ENTRY_POINT!!! ->" + entryPoints.first().name);
-                entryPoints.first().setDangerous(True)
+                logger.debug("FOUND DANGEROUS ENTRY_POINT!!! ->" + entryPoints[0].name);
+                entryPoints[0].setDangerous(True)
             else:
                 for entry in entryPoints:
                     logger.debug("ENTRY_POINT->" + entry.name);
@@ -291,6 +299,7 @@ def insideValidation(line, val):
 
     else:
         entryPoints = getEntryPoints(line[valIndex:], val.line)
+        foundEntryPoints.extend(entryPoints)
 
         if(entryPoints == []):
             var = findVariable(line[valIndex:])
@@ -298,8 +307,8 @@ def insideValidation(line, val):
                 var.sanitize();
         else: 
             if(len(entryPoints) == 1):
-                logger.debug("sanitization :D !!! ->" + entryPoints.first().name);
-                entryPoints.first().setDangerous(False)
+                logger.debug("sanitization :D !!! ->" + entryPoints[0].name);
+                entryPoints[0].setDangerous(False)
             else:
                 for entry in entryPoints:
                     logger.debug("entry point->" + entry.name);
@@ -320,6 +329,9 @@ def handleLines(lines):
                     temp_line = ''
                 content.append(line.rstrip())
                 logger.debug("Line added to file: \"" + line.rstrip() + "\"")
+            elif line.rstrip().endswith(">"):
+                content.append(line.rstrip())
+
             else:
                 temp_line += line.rstrip();
     else: 
