@@ -13,7 +13,7 @@ foundSensitiveSinks = []
 foundVariables = []
 
 logger = logging.getLogger("mylog")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 class Slice:
     entryPoints = []
@@ -50,13 +50,22 @@ class EntryPoint:
         self.name = name
         self.line = line
         self.__dangerous = False
+        self.sanitized = False
 
     def setDangerous(self, boolean):
         logger.debug("Dangerous set to -> " + str(boolean))
-        self.__dangerous = boolean
+        if(self.sanitized == False):
+            self.__dangerous = boolean
     
     def isDangerous(self):
         return self.__dangerous
+
+    def sanitize(self):
+        self.__dangerous = False
+        self.sanitized = True
+
+    def unSanitize(self):
+        self.sanitized = False
 
 class Variable:
     name = ''
@@ -91,6 +100,9 @@ class Variable:
         self.ancestors = []
         self.dangerous = False
         self.sanitized = True
+
+    def unSanitize(self):
+        self.sanitized = False
 
 """
 a = $_GET
@@ -199,31 +211,34 @@ def getVariables(line, lineNumber):
     if "=" in line:
         logger.debug("Assignment in line:" + str(lineNumber))
 
-        rightSide = None
+        rightSide = []
         #has anything(only entries could have been) been found on this line?
         for entry in foundEntryPoints:
             if(entry.line == lineNumber):
                 logger.debug("Entry on right side of assignment")
-                rightSide = entry
+                rightSide.append(entry)
 
         #has it got another variable on this line?
         for var in foundVariables:
             if var.name in line:
                 logger.debug("Variable on right side of assignment")
-                rightSide = var
+                rightSide.append(var)
 
-        if(rightSide != None):
+        if(rightSide != []):
             var = line[line[:line.find("=")].find("$"):line.find("=")].rstrip()
-            if(var != ''):
-                logger.debug("Found Variable -> " + var)
-                varObj = Variable(var, lineNumber)
-                if(isinstance(rightSide, Variable)):
-                    if(rightSide.sanitized == True):
+            for obj in rightSide:
+                if(var != ''):
+                    logger.debug("Found Variable -> " + var)
+                    varObj = Variable(var, lineNumber)
+                    if(obj.sanitized == True):
                         varObj.sanitize()
-                    varObj.addAncestor([rightSide]+ rightSide.ancestors)
-                elif(isinstance(rightSide, EntryPoint)):
-                    varObj.addAncestor([rightSide])
-                result.append(varObj)
+                    else: 
+                        varObj.unSanitize()
+                    if(isinstance(obj, Variable)):
+                        varObj.addAncestor([obj]+ obj.ancestors)
+                    elif(isinstance(obj, EntryPoint)):
+                        varObj.addAncestor([obj])
+                    result.append(varObj)
 
     return result
 
@@ -234,8 +249,6 @@ def getEntryPoints(line, lineNumber):
         if entry in line:
             logger.debug("Found Entry -> " + entry)
             entryObj = EntryPoint(entry, lineNumber)
-            for entry in foundEntryPoints:
-                print(entry.name)
             result.append(entryObj)
 
     return result;
@@ -308,11 +321,11 @@ def insideValidation(line, val):
         else: 
             if(len(entryPoints) == 1):
                 logger.debug("sanitization :D !!! ->" + entryPoints[0].name);
-                entryPoints[0].setDangerous(False)
+                entryPoints[0].sanitize()
             else:
                 for entry in entryPoints:
                     logger.debug("entry point->" + entry.name);
-                    entry.setDangerous(False)
+                    entry.sanitize()
         
 
 def handleLines(lines):
