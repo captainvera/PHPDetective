@@ -1,4 +1,6 @@
 import PatternParser
+import sys
+
 
 def getEntries(patterns):
     entries = []
@@ -27,4 +29,32 @@ def getSinks(patterns):
                 sinks.append(sink)
 
     return sinks
+
+def printResults(slic, patterns):
+    if(len(slic.variables)>0):
+        print("-----------------------")
+        for pat in patterns:
+            print(pat.vuln + " Vulnerability Detected")
+        print()
+        print("The vulnerability enters through: ")
+        for entry in slic.dangerousEntryPoints:
+            print(entry.name + " on line " + str(entry.line))
+        print()
+        print("Tainted Variables: ")
+        for var in slic.variables:
+            print(var.name + " on line " + str(var.line))
+        print()
+        print("Vulnerability is injected into the system in: ")
+        for sink in slic.sensitiveSinks:
+            print(sink.name + " on line " + str(sink.line))
+        print("-----------------------")
+
+    else:
+        print("-----------------------")
+        print("No Vulnerability Detected")
+        print()
+        print("Sanitization is done in:")
+        for val in slic.validations:
+            print(val.name + " on line " + str(val.line))
+        
 

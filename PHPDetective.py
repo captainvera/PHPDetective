@@ -4,8 +4,9 @@ import logging
 import PatternParser
 import utilities
 import SliceParser
+import Matcher
 
-logging.basicConfig( level=logging.DEBUG)
+logging.basicConfig( level=logging.WARNING)
 
 def main(argv):
 
@@ -34,14 +35,10 @@ def main(argv):
     validation = utilities.getVals(patterns)
     sensitiveSinks = utilities.getSinks(patterns)
 
-    slices = SliceParser.fileParser(inputfile, entryPoints, validation, sensitiveSinks)
+    slic = SliceParser.fileParser(inputfile, entryPoints, validation, sensitiveSinks)
 
+    patt = Matcher.match(slic, patterns)
 
-    """
-    if(Matcher)
-        print("Vulnerability found")
-    else print("Program is ok")
-    """
-
+    utilities.printResults(slic, patt)
 
 main(sys.argv[1:]);
