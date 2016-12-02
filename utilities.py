@@ -1,6 +1,6 @@
 import PatternParser
 
-def getEntry(patterns):
+def getEntries(patterns):
     entries = []
     for pattern in patterns:
         for entry in pattern.getEntryPoints():

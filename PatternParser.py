@@ -1,7 +1,7 @@
 import os
 import logging
 
-logging.basicConfig( level=logging.DEBUG)
+logging.basicConfig( level=logging.INFO)
 
 def getChunks(data, n):
     """
@@ -56,8 +56,8 @@ class PatternParser:
         for pattern in patterns:
             vuln = pattern[0]
             entry_points = pattern[1].split(',')
-            san_functions = pattern[2]
-            sens_sinks = pattern[3]
+            san_functions = pattern[2].split(',')
+            sens_sinks = pattern[3].split(',')
 
 
             new_pattern = Pattern(vuln,entry_points,san_functions,sens_sinks)

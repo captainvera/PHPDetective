@@ -30,7 +30,7 @@ def main(argv):
 
     patterns = patParser.getKnownPatterns()
 
-    entryPoints = utilities.getEntry(patterns)
+    entryPoints = utilities.getEntries(patterns)
     validation = utilities.getVals(patterns)
     sensitiveSinks = utilities.getSinks(patterns)
 
