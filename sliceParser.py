@@ -1,8 +1,5 @@
-
 import re
 import logging
-
-#possibleEp = ['$_POST','$_GET','$_COOKIE','$_REQUEST', 'HTTP_GET_VARS', 'HTTP_POST_VARS', 'HTTP_COOKIE_VARS', 'HTTP_REQUEST_VARS','$_FILES','$_SERVERS']
 
 #Lists of possible EP/val/sink
 possibleEp = []
@@ -16,28 +13,34 @@ foundSensitiveSinks = []
 foundVariables = []
 
 logger = logging.getLogger("mylog")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 class Slice:
-	name = ''
-	entryPoints = []
-	validations = []
-	sensitiveSinks = []
+    entryPoints = []
+    validations = []
+    sensitiveSinks = []
+    variables = []
 
-	def __init__(self):
-		self.name = 'test'
-		self.entryPoints.append('EntryTest')
-		self.validations.append('ValidationTest')
-		self.sensitiveSinks.append('SinkTest')
+    def __init__(self, entryPoints, validations, sensitiveSinks, variables, dangEntry):
+        self.entryPoints = entryPoints
+        self.dangerousEntryPoints = dangEntry
+        self.validations = validations
+        self.sensitiveSinks = sensitiveSinks
+        self.variables = variables
 
-	def getItems(self):
-		print("Name : " + self.name)
-		print("EntryPoints: ")
-		for x in range(len(self.entryPoints)):
-			print("Entry %d: %s" % (x,self.entryPoints[x]))
-		print("SensitiveSinks: ")
-		for x in range(len(self.sensitiveSinks)):
-			print("Sink %d: %s" % (x,self.sensitiveSinks[x]))
+    def getItems(self):
+    	print("EntryPoints: ")
+    	for x in range(len(self.entryPoints)):
+    		print("Entry %d: %s" % (x,self.entryPoints[x].name))
+    	print("SensitiveSinks: ")
+    	for x in range(len(self.sensitiveSinks)):
+    		print("Sink %d: %s" % (x,self.sensitiveSinks[x].name))
+    	print("Sanitization: ")
+    	for x in range(len(self.validations)):
+    		print("Entry %d: %s" % (x,self.validations[x].name))
+    	print("Variables: ")
+    	for x in range(len(self.variables)):
+    		print("Entry %d: %s" % (x,self.variables[x].name))
 
 class EntryPoint:
     line = 0
@@ -111,12 +114,6 @@ class Validation:
         self.name = name;
         self.line = line;
 
-#do i need setVariable?
-
-##################
-#test = Slice()
-#test.getItems()
-##################
 
 def fileParser(fileName, entry, vali, sinks):
         global possibleEp 
@@ -131,16 +128,6 @@ def fileParser(fileName, entry, vali, sinks):
         possibleEp = entry
         possibleVal = vali
         possibleSink = sinks
-
-        """
-        for sink in possibleSink:
-            logger.debug(sink)
-        for sink in possibleEp:
-            logger.debug(sink)
-        for sink in possibleVal:
-            logger.debug(sink)
-        """
-
 
 	#Insert FileName
         logger.debug("File Name : " + fileName)
@@ -165,22 +152,29 @@ def fileParser(fileName, entry, vali, sinks):
             foundValidations.extend(getValidations(content[i], i+1))
             foundVariables.extend(getVariables(content[i], i+1))
 
-	#Just an AKNOWLEDGE:  VARSLIST[i] has a ENTRYPOINT[i]
-	#for l in range(len(varsList)):
-	#	logger.debug("Var : %s ----> possibleEp : %s" % (varsList[l], entryPoints[l]))
-
+        dangerousVars = []
         for variable in foundVariables:
             if(variable.dangerous == True):
                 logger.info("[Ending] Dangerous Variable -> " + variable.name)
+                dangerousVars.append(variable)
 
+        dangerousEntries = []
         for entry in foundEntryPoints:
-            logger.info("[Ending] Entry point -> " + entry.name)
+            if(entry.dangerous == True):
+                logger.info("[Ending] Dangerous Entry -> " + entry.name)
+                dangerousEntries.append(entry)
+            else:
+                logger.info("[Ending] Entry point -> " + entry.name)
 
         for sanitization in foundValidations:
             logger.info("[Ending] Validation -> " + sanitization.name)
 
         for sink in foundSensitiveSinks:
             logger.info("[Ending] Sink -> " + sink.name)
+
+    
+
+        return Slice(foundEntryPoints, foundValidations, foundSensitiveSinks, dangerousVars, dangerousEntries)
 
 
 #Find sinks in this line
@@ -223,7 +217,7 @@ def getVariables(line, lineNumber):
                 if(isinstance(rightSide, Variable)):
                     if(rightSide.sanitized == True):
                         varObj.sanitized = True
-                    varObj.addAncestor([rightSide])
+                varObj.addAncestor([rightSide])
                 result.append(varObj)
 
     return result
@@ -336,11 +330,3 @@ def handleLines(lines):
 
 #TODO::XXX:: mysql_query(sanitize(entry_point))
 
-#a = b
-#mysqlQuery(a)
-#sanitize(a)
-
-
-##################
-#fileParser()
-##################
