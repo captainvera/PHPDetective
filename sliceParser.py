@@ -234,10 +234,8 @@ def getVariables(line, lineNumber):
                         varObj.sanitize()
                     else: 
                         varObj.unSanitize()
-                    if(isinstance(obj, Variable)):
-                        varObj.addAncestor([obj]+ obj.ancestors)
-                    elif(isinstance(obj, EntryPoint)):
-                        varObj.addAncestor([obj])
+                    
+                    varObj.addAncestor([obj])
                     result.append(varObj)
 
     return result
