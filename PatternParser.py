@@ -86,7 +86,7 @@ class PatternParser:
 ###################################################################
 
 class Pattern:
-    vuln = ''
+    vuln = []
     entry_points = []
     san_functions = []
     sens_sinks = []
@@ -130,4 +130,5 @@ Utilization examples
 #patParser.parseAll()
 
 #gets a list of the patterns in those files
+
 #patterns = patParser.getKnownPatterns()
