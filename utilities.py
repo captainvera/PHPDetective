@@ -31,7 +31,7 @@ def getSinks(patterns):
     return sinks
 
 def printResults(slic, patterns):
-    if(len(slic.variables)>0):
+    if(len(slic.variables)>0 or len(slic.dangerousEntryPoints)>0):
         print("-----------------------")
         for pat in patterns:
             print(pat.vuln + " Vulnerability Detected")
